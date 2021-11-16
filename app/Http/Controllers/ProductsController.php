@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
-class UsersController extends Controller
+class ProductsController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -18,8 +18,10 @@ class UsersController extends Controller
      */
     public function index(): JsonResponse
     {
-        $users = DB::table('users')->orderBy('id','DESC')->get();
-        return response()->json($users->toArray());
+        {
+            $products = DB::table('products')->orderBy('id','DESC')->get();
+            return response()->json($products->toArray());
+        }
     }
 
     /**
@@ -31,9 +33,8 @@ class UsersController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:50',
-            'email' => 'required|email:rfc,dns|unique:users',
-            'number_of_orders' => 'required|between:0,99.99'
+            'name' => 'required|string|max:50|unique:products',
+            'price_in_PLN' => 'between:0,99999.99'
         ]);
 
         if ($validator->fails()) {
@@ -43,21 +44,20 @@ class UsersController extends Controller
             ], 400);
         }
 
-        $user = new User();
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $user->number_of_orders = $request->number_of_orders;
+        $product = new Product();
+        $product->name = $request->name;
+        $product->price_in_PLN = $request->price_in_PLN;
 
-        if ($user->save()) {
+        if ($product->save()) {
             return response()->json([
                 'status' => true,
-                'user' => $user,
-                'message' => 'New user created'
+                'product' => $product,
+                'message' => 'New product created'
             ]);
         } else {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to create user'
+                'message' => 'Failed to create product'
             ]);
         }
     }
@@ -66,11 +66,12 @@ class UsersController extends Controller
      * Display the specified resource.
      *
      * @param int $id
-     * @return User
+     * @return Product
      */
-    public function show(int $id): User
+    public
+    function show(int $id): Product
     {
-        return User::find($id);
+        return Product::find($id);
     }
 
     /**
@@ -78,13 +79,14 @@ class UsersController extends Controller
      *
      * @param Request $request
      * @param int $id
-     * @return User
+     * @return Product
      */
-    public function update(Request $request, int $id): User
+    public
+    function update(Request $request, int $id): Product
     {
-        $user = User::find($id);
-        $user->update($request->all());
-        return $user;
+        $product = Product::find($id);
+        $product->update($request->all());
+        return $product;
     }
 
     /**
@@ -93,20 +95,21 @@ class UsersController extends Controller
      * @param int $id
      * @return JsonResponse
      */
-    public function destroy(int $id): JsonResponse
+    public
+    function destroy(int $id): JsonResponse
     {
-        $user = User::find($id);
+        $product = Product::find($id);
 
-        if ($user->delete()) {
+        if ($product->delete()) {
             return response()->json([
                 'status' => true,
-                'users' => $user,
-                'message' => "User deleted correctly"
+                'product' => $product,
+                'message' => "Product deleted correctly"
             ]);
         } else {
             return response()->json([
                 'status' => false,
-                'message' => "Can't delete this user"
+                'message' => "Can't delete this product"
             ]);
         }
     }
