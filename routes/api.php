@@ -19,8 +19,9 @@ Route::group([
     'prefix' => 'admin'
 
 ],function(){
-    Route::resource('users', 'UsersController');
-    Route::resource('products', 'ProductsController');
+    Route::apiResource('users', 'UsersController');
+    Route::apiResource('products', 'ProductsController');
+    Route::apiResource('orders', 'OrdersController');
 });
 
 
@@ -29,7 +30,9 @@ Route::group([
     'namespace'=>'App\Http\Controllers',
     'prefix' => 'public'
 ],function(){
-    Route::resource('products', 'ProductsController')
+    Route::apiResource('products', 'ProductsController')
         ->only('index', 'show');
+    Route::apiResource('orders', 'OrdersController')
+        ->only('store');
 
 });

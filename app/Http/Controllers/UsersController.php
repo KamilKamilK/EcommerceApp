@@ -18,7 +18,7 @@ class UsersController extends Controller
      */
     public function index(): JsonResponse
     {
-        $users = DB::table('users')->orderBy('id','DESC')->get();
+        $users = User::orderBy('id','DESC')->with('orders')->get();
         return response()->json($users->toArray());
     }
 
@@ -42,6 +42,9 @@ class UsersController extends Controller
                 'errors' => $validator->errors()
             ], 400);
         }
+
+        $orders = User::with('orders')->get();
+        dd($orders);
 
         $user = new User();
         $user->name = $request->name;
