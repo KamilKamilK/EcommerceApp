@@ -34,7 +34,7 @@ class ProductsController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:50|unique:products',
-            'price_in_PLN' => 'between:0,99999.99'
+            'price_in_PLN' => 'required|between:0,99999.99'
         ]);
 
         if ($validator->fails()) {
