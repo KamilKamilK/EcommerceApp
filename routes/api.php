@@ -20,6 +20,7 @@ Route::group([
 
 ],function(){
     Route::resource('users', 'UsersController');
+    Route::resource('products', 'ProductsController');
 });
 
 
@@ -28,7 +29,7 @@ Route::group([
     'namespace'=>'App\Http\Controllers',
     'prefix' => 'public'
 ],function(){
-    Route::resource('users', 'UsersController')
+    Route::resource('products', 'ProductsController')
         ->only('index', 'show');
 
 });

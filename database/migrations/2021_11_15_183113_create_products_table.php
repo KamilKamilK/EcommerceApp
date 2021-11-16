@@ -15,9 +15,9 @@ class CreateProductsTable extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
             $table->string('name', 50);
-            $table->decimal('price_in_PLN', 5,2)->default(0.00);
+            $table->float('price_in_PLN', 5,2);
+            $table->timestamps();
         });
     }
 
