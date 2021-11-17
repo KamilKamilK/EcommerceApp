@@ -12,7 +12,8 @@ class Order extends Model
     protected $table = 'orders';
 
     protected $fillable = [
-        'price',
+        'user_id',
+        'price_in_PLN',
         'order_status',
     ];
 

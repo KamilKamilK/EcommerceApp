@@ -15,7 +15,7 @@ class OrderFactory extends Factory
     public function definition()
     {
         return [
-            'user_id' => User::factory(10),
+            'user_id' => User::all()->random()->id,
             'price_in_PLN' =>$this->faker->randomFloat(2,0,200),
             'order_status' => $this->faker->randomElement(['open', 'close'])
         ];
