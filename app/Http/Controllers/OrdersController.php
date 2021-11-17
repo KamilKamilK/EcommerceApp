@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class OrdersController extends Controller
@@ -12,9 +12,9 @@ class OrdersController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function index()
+    public function index(): JsonResponse
     {
         {
             $orders = Order::with('user')->orderBy('id', 'DESC')->get();
@@ -25,13 +25,14 @@ class OrdersController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'price_in_PLN' => 'required|between:0,99999.99',
+            'user_id' => 'required|numeric|min:1',
+            'price_in_PLN' => 'required|regex:/^\d+(\.\d{1,2})?$/',
             'order_status' => 'required'
         ]);
 
@@ -65,9 +66,9 @@ class OrdersController extends Controller
      * Display the specified resource.
      *
      * @param int $id
-     * @return \Illuminate\Http\Response
+     * @return Order
      */
-    public function show($id)
+    public function show(int $id): Order
     {
         return Order::find($id);
 
@@ -76,11 +77,11 @@ class OrdersController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @param int $id
-     * @return \Illuminate\Http\Response
+     * @return Order
      */
-    public function update(Request $request, $id)
+    public function update(Request $request,int $id): Order
     {
         $order = Order::find($id);
         $order->update($request->all());
@@ -91,9 +92,9 @@ class OrdersController extends Controller
      * Remove the specified resource from storage.
      *
      * @param int $id
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function destroy($id)
+    public function destroy(int $id): JsonResponse
     {
         $order = Order::find($id);
 

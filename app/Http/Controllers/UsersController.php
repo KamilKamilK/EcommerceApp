@@ -5,8 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class UsersController extends Controller
@@ -42,9 +40,6 @@ class UsersController extends Controller
                 'errors' => $validator->errors()
             ], 400);
         }
-
-        $orders = User::with('orders')->get();
-        dd($orders);
 
         $user = new User();
         $user->name = $request->name;

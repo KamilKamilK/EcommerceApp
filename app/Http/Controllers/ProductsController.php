@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
@@ -34,7 +33,7 @@ class ProductsController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:50|unique:products',
-            'price_in_PLN' => 'required|between:0,99999.99'
+            'price_in_PLN' => 'required|regex:/^\d+(\.\d{1,2})?$/'
         ]);
 
         if ($validator->fails()) {

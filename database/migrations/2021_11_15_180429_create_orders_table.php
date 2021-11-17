@@ -19,7 +19,7 @@ class CreateOrdersTable extends Migration
             $table->unsignedInteger('user_id')->index();
             $table->foreign('user_id')->references('id')->on('users');
 
-            $table->float('price_in_PLN');
+            $table->float('price_in_PLN',8,2);
             $table->enum('order_status', ['open', 'close'])->default('open');
             $table->timestamps();
         });

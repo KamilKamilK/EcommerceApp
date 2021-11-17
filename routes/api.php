@@ -34,5 +34,4 @@ Route::group([
         ->only('index', 'show');
     Route::apiResource('orders', 'OrdersController')
         ->only('store');
-
 });
