@@ -18,7 +18,6 @@ class CreateOrderProducts extends Migration
             $table->unsignedBigInteger('order_id')->index();
             $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
 
-
             $table->unsignedBigInteger('product_id')->index();
             $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
             $table->timestamps();
@@ -32,6 +31,6 @@ class CreateOrderProducts extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('order_items');
+        Schema::dropIfExists('order_products');
     }
 }

@@ -75,7 +75,7 @@ class OrdersController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:50',
-            'email' => 'required|email:rfc,dns',
+            'email' => 'required|email',
             'product_id' => 'required|numeric|min:0'
         ]);
 
@@ -94,22 +94,43 @@ class OrdersController extends Controller
             $user->number_of_orders = 1;
             $user->save();
         } else{
-            $user->number_of_orders =$user->number_of_orders +1;
+            $user->number_of_orders =$user->orders()->count();
             $user->update();
         }
 
-        $product = Product::where('id', $request->product_id)->first();
+        $newProduct = Product::find($request->product_id);
 
-        $order = new Order();
-        $order->user_id = $user->id;
-        $order->price_in_PLN = $product->price_in_PLN;
-        $order->order_status = $request->order_status;
+        $openOrder = Order::where('user_id',$user->id)->where('order_status','open')->first();
+        $closedOrder = Order::where('user_id',$user->id)->where('order_status','close')->get();
+        $userOrders = Order::where('user_id',$user->id)->get();
 
-        if ($order->save()) {
+        foreach($userOrders as $userOrder){
+            $userOrder->products()->get(['order_id','product_id']);
+        }
+
+        $totalPrice = 0;
+        foreach ($userOrders as $userOrder){
+            $totalPrice +=$userOrder->price_in_PLN;
+        }
+
+        if ($user->id && $closedOrder && $openOrder == null) {
+            $order = new Order();
+            $order->user_id = $user->id;
+            $order->price_in_PLN = $newProduct->price_in_PLN;
+            $order->order_status = $request->order_status;
+        }elseif($user->id && $openOrder ){
+            $openOrder->user_id = $user->id;
+            $openOrder->price_in_PLN = $totalPrice;
+            $openOrder->order_status = $request->order_status;
+            $openOrder->update();
+        }
+
+        if ($order->save()){
 
             DB::table('order_products')->insert([
                 'order_id' => $order->id,
                 'product_id' => $request->product_id,
+                'created_at' => date('Y-m-d H:i:s'),
             ]);
 
             return response()->json([
@@ -117,6 +138,19 @@ class OrdersController extends Controller
                 'order' => $order,
                 'message' => 'New order created'
             ]);
+        }elseif ( $openOrder->update()) {
+
+                DB::table('order_products')->insert([
+                    'order_id' => $order->id,
+                    'product_id' => $request->product_id,
+                    'created_at' => date('Y-m-d H:i:s'),
+                ]);
+
+                return response()->json([
+                    'status' => true,
+                    'order' => $order,
+                    'message' => 'New order updated'
+                ]);
         } else {
             return response()->json([
                 'status' => false,
@@ -129,11 +163,11 @@ class OrdersController extends Controller
      * Display the specified resource.
      *
      * @param int $id
-     * @return Order
+     * @return mixed
      */
-    public function show(int $id): Order
+    public function show(int $id)
     {
-        return Order::find($id);
+        return Order::where('id',$id)->with('products')->get();
     }
 
     /**
