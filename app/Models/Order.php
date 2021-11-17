@@ -17,6 +17,12 @@ class Order extends Model
         'order_status',
     ];
 
+    public function products()
+    {
+        return $this->belongsToMany(Product::class, 'order_products','product_id','order_id')
+            ->withTimestamps();
+    }
+
     // user_id
     public function user()
     {

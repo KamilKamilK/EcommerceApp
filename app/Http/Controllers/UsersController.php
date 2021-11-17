@@ -64,11 +64,11 @@ class UsersController extends Controller
      * Display the specified resource.
      *
      * @param int $id
-     * @return User
+     * @return mixed
      */
-    public function show(int $id): User
+    public function show(int $id)
     {
-        return User::find($id);
+        return User::where('id',$id)->with('orders')->get();
     }
 
     /**

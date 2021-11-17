@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\Product;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class OrdersController extends Controller
@@ -63,15 +66,108 @@ class OrdersController extends Controller
     }
 
     /**
+     * Store a newly created resource in storage.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function storePublic(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:50',
+            'email' => 'required|email',
+            'product_id' => 'required|numeric|min:0'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'errors' => $validator->errors()
+            ], 400);
+        }
+
+        $user = User::where('email', $request->email)->first();
+        if ($user == null) {
+            $user = new User();
+            $user->name = $request->name;
+            $user->email = $request->email;
+            $user->number_of_orders = 1;
+            $user->save();
+        } else{
+            $user->number_of_orders =$user->orders()->count();
+            $user->update();
+        }
+
+        $newProduct = Product::find($request->product_id);
+
+        $openOrder = Order::where('user_id',$user->id)->where('order_status','open')->first();
+        $closedOrder = Order::where('user_id',$user->id)->where('order_status','close')->get();
+        $userOrders = Order::where('user_id',$user->id)->get();
+
+        foreach($userOrders as $userOrder){
+            $userOrder->products()->get(['order_id','product_id']);
+        }
+
+        $totalPrice = 0;
+        foreach ($userOrders as $userOrder){
+            $totalPrice +=$userOrder->price_in_PLN;
+        }
+
+        if ($user->id && $closedOrder && $openOrder == null) {
+            $order = new Order();
+            $order->user_id = $user->id;
+            $order->price_in_PLN = $newProduct->price_in_PLN;
+            $order->order_status = $request->order_status;
+        }elseif($user->id && $openOrder ){
+            $openOrder->user_id = $user->id;
+            $openOrder->price_in_PLN = $totalPrice;
+            $openOrder->order_status = $request->order_status;
+            $openOrder->update();
+        }
+
+        if ($order->save()){
+
+            DB::table('order_products')->insert([
+                'order_id' => $order->id,
+                'product_id' => $request->product_id,
+                'created_at' => date('Y-m-d H:i:s'),
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'order' => $order,
+                'message' => 'New order created'
+            ]);
+        }elseif ( $openOrder->update()) {
+
+                DB::table('order_products')->insert([
+                    'order_id' => $order->id,
+                    'product_id' => $request->product_id,
+                    'created_at' => date('Y-m-d H:i:s'),
+                ]);
+
+                return response()->json([
+                    'status' => true,
+                    'order' => $order,
+                    'message' => 'New order updated'
+                ]);
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to create order'
+            ]);
+        }
+    }
+
+    /**
      * Display the specified resource.
      *
      * @param int $id
-     * @return Order
+     * @return mixed
      */
-    public function show(int $id): Order
+    public function show(int $id)
     {
-        return Order::find($id);
-
+        return Order::where('id',$id)->with('products')->get();
     }
 
     /**
@@ -81,7 +177,7 @@ class OrdersController extends Controller
      * @param int $id
      * @return Order
      */
-    public function update(Request $request,int $id): Order
+    public function update(Request $request, int $id): Order
     {
         $order = Order::find($id);
         $order->update($request->all());
