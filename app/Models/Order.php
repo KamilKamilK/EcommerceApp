@@ -17,6 +17,12 @@ class Order extends Model
         'order_status',
     ];
 
+    public function products()
+    {
+        return $this->belongsToMany(Product::class, 'order_item','order_id','product_id')
+            ->withTimestamps()->withPivot('order_item');
+    }
+
     // user_id
     public function user()
     {

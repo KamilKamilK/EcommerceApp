@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\Product;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class OrdersController extends Controller
@@ -63,6 +66,66 @@ class OrdersController extends Controller
     }
 
     /**
+     * Store a newly created resource in storage.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function storePublic(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:50',
+            'email' => 'required|email:rfc,dns',
+            'product_id' => 'required|numeric|min:0'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'errors' => $validator->errors()
+            ], 400);
+        }
+
+        $user = User::where('email', $request->email)->first();
+        if ($user == null) {
+            $user = new User();
+            $user->name = $request->name;
+            $user->email = $request->email;
+            $user->number_of_orders = 1;
+            $user->save();
+        } else{
+            $user->number_of_orders =$user->number_of_orders +1;
+            $user->update();
+        }
+
+        $product = Product::where('id', $request->product_id)->first();
+
+        $order = new Order();
+        $order->user_id = $user->id;
+        $order->price_in_PLN = $product->price_in_PLN;
+        $order->order_status = $request->order_status;
+
+        if ($order->save()) {
+
+            DB::table('order_products')->insert([
+                'order_id' => $order->id,
+                'product_id' => $request->product_id,
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'order' => $order,
+                'message' => 'New order created'
+            ]);
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to create order'
+            ]);
+        }
+    }
+
+    /**
      * Display the specified resource.
      *
      * @param int $id
@@ -71,7 +134,6 @@ class OrdersController extends Controller
     public function show(int $id): Order
     {
         return Order::find($id);
-
     }
 
     /**
@@ -81,7 +143,7 @@ class OrdersController extends Controller
      * @param int $id
      * @return Order
      */
-    public function update(Request $request,int $id): Order
+    public function update(Request $request, int $id): Order
     {
         $order = Order::find($id);
         $order->update($request->all());
