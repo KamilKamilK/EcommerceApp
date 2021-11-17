@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class OrdersController extends Controller
@@ -19,10 +20,12 @@ class OrdersController extends Controller
      */
     public function index(): JsonResponse
     {
-        {
-            $orders = Order::with('user')->orderBy('id', 'DESC')->get();
-            return response()->json($orders->toArray());
-        }
+        Log::channel('order')->info('Get all orders',[
+            'listOfOrder' => Order::all()
+        ]);
+        $orders = Order::with('user')->orderBy('id', 'DESC')->get();
+        return response()->json($orders->toArray());
+
     }
 
     /**
@@ -73,6 +76,7 @@ class OrdersController extends Controller
      */
     public function storePublic(Request $request): JsonResponse
     {
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:50',
             'email' => 'required|email',
@@ -93,24 +97,24 @@ class OrdersController extends Controller
             $user->email = $request->email;
             $user->number_of_orders = 1;
             $user->save();
-        } else{
-            $user->number_of_orders =$user->orders()->count();
+        } else {
+            $user->number_of_orders = $user->orders()->count();
             $user->update();
         }
 
         $newProduct = Product::find($request->product_id);
 
-        $openOrder = Order::where('user_id',$user->id)->where('order_status','open')->first();
-        $closedOrder = Order::where('user_id',$user->id)->where('order_status','close')->get();
-        $userOrders = Order::where('user_id',$user->id)->get();
+        $openOrder = Order::where('user_id', $user->id)->where('order_status', 'open')->first();
+        $closedOrder = Order::where('user_id', $user->id)->where('order_status', 'close')->get();
+        $userOrders = Order::where('user_id', $user->id)->get();
 
-        foreach($userOrders as $userOrder){
-            $userOrder->products()->get(['order_id','product_id']);
+        foreach ($userOrders as $userOrder) {
+            $userOrder->products()->get(['order_id', 'product_id']);
         }
 
         $totalPrice = 0;
-        foreach ($userOrders as $userOrder){
-            $totalPrice +=$userOrder->price_in_PLN;
+        foreach ($userOrders as $userOrder) {
+            $totalPrice += $userOrder->price_in_PLN;
         }
 
         if ($user->id && $closedOrder && $openOrder == null) {
@@ -118,14 +122,18 @@ class OrdersController extends Controller
             $order->user_id = $user->id;
             $order->price_in_PLN = $newProduct->price_in_PLN;
             $order->order_status = $request->order_status;
-        }elseif($user->id && $openOrder ){
+        } elseif ($user->id && $openOrder) {
             $openOrder->user_id = $user->id;
             $openOrder->price_in_PLN = $totalPrice;
             $openOrder->order_status = $request->order_status;
             $openOrder->update();
         }
 
-        if ($order->save()){
+        Log::channel('order')->info('Order created', [
+            'orderCreated' => Order::where('user_id', $user->id)->get()
+        ]);
+
+        if ($order->save()) {
 
             DB::table('order_products')->insert([
                 'order_id' => $order->id,
@@ -138,19 +146,19 @@ class OrdersController extends Controller
                 'order' => $order,
                 'message' => 'New order created'
             ]);
-        }elseif ( $openOrder->update()) {
+        } elseif ($openOrder->update()) {
 
-                DB::table('order_products')->insert([
-                    'order_id' => $order->id,
-                    'product_id' => $request->product_id,
-                    'created_at' => date('Y-m-d H:i:s'),
-                ]);
+            DB::table('order_products')->insert([
+                'order_id' => $order->id,
+                'product_id' => $request->product_id,
+                'created_at' => date('Y-m-d H:i:s'),
+            ]);
 
-                return response()->json([
-                    'status' => true,
-                    'order' => $order,
-                    'message' => 'New order updated'
-                ]);
+            return response()->json([
+                'status' => true,
+                'order' => $order,
+                'message' => 'New order updated'
+            ]);
         } else {
             return response()->json([
                 'status' => false,
@@ -167,7 +175,7 @@ class OrdersController extends Controller
      */
     public function show(int $id)
     {
-        return Order::where('id',$id)->with('products')->get();
+        return Order::where('id', $id)->with('products')->get();
     }
 
     /**
@@ -179,6 +187,9 @@ class OrdersController extends Controller
      */
     public function update(Request $request, int $id): Order
     {
+        Log::channel('order')->info('Order updated', [
+            'orderUpdated' => Order::find($id)
+        ]);
         $order = Order::find($id);
         $order->update($request->all());
         return $order;
@@ -193,6 +204,10 @@ class OrdersController extends Controller
     public function destroy(int $id): JsonResponse
     {
         $order = Order::find($id);
+
+        Log::channel('order')->info('Order destroyed', [
+            'orderDestroyed' => Order::find($id)
+        ]);
 
         if ($order->delete()) {
             return response()->json([
