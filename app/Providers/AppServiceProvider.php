@@ -34,7 +34,5 @@ class AppServiceProvider extends ServiceProvider
         Schema::defaultStringLength(191);
 
         User::observe(UserObserver::class);
-        Product::observe(ProductObserver::class);
-        Order::observe(OrderObserver::class);
     }
 }

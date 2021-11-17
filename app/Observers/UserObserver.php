@@ -6,21 +6,19 @@ use App\Models\User;
 
 class UserObserver
 {
-//    /**
-//     * Handle events after all transactions are committed.
-//     *
-//     * @var bool
-//     */
-//    public $afterCommit = true;
+
     /**
-     * Handle the User "created" event.
+     * Handle the User "creating" event.
      *
      * @param User $user
      * @return void
      */
-    public function created(User $user)
+    public function creating(User $user)
     {
-        //
+
+            $user = new User();
+            $user->number_of_orders +=  1;
+            $user->save();
     }
 
     /**
