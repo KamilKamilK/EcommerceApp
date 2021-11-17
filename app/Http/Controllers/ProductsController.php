@@ -6,6 +6,7 @@ use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class ProductsController extends Controller
@@ -17,10 +18,13 @@ class ProductsController extends Controller
      */
     public function index(): JsonResponse
     {
-        {
-            $products = DB::table('products')->orderBy('id','DESC')->get();
-            return response()->json($products->toArray());
-        }
+        Log::channel('product')->info('Get all products',[
+            'listOfProducts' => Product::first()
+        ]);
+
+        $products = DB::table('products')->orderBy('id', 'DESC')->get();
+        return response()->json($products->toArray());
+
     }
 
     /**
@@ -42,6 +46,10 @@ class ProductsController extends Controller
                 'errors' => $validator->errors()
             ], 400);
         }
+
+        Log::channel('product')->info('Product created',[
+            'productCreated' => Product::first()
+        ]);
 
         $product = new Product();
         $product->name = $request->name;
@@ -83,6 +91,9 @@ class ProductsController extends Controller
     public
     function update(Request $request, int $id): Product
     {
+        Log::channel('product')->info('Product updated',[
+            'productUpdated' => Product::find($id)
+        ]);
         $product = Product::find($id);
         $product->update($request->all());
         return $product;
@@ -97,6 +108,10 @@ class ProductsController extends Controller
     public
     function destroy(int $id): JsonResponse
     {
+
+        Log::channel('product')->info('Product destroyed',[
+            'productDestroyed' => Product::find($id)
+        ]);
         $product = Product::find($id);
 
         if ($product->delete()) {

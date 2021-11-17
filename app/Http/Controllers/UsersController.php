@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class UsersController extends Controller
@@ -16,6 +17,10 @@ class UsersController extends Controller
      */
     public function index(): JsonResponse
     {
+        Log::channel('attention')->info('Get all users',[
+            'listOfId' => User::first()
+        ]);
+
         $users = User::orderBy('id','DESC')->with('orders')->get();
         return response()->json($users->toArray());
     }
@@ -46,12 +51,18 @@ class UsersController extends Controller
         $user->email = $request->email;
         $user->number_of_orders = $request->number_of_orders;
 
+        Log::channel('user')->info('User created',[
+            'userCreated' => User::first()
+        ]);
+
         if ($user->save()) {
             return response()->json([
                 'status' => true,
                 'user' => $user,
                 'message' => 'New user created'
             ]);
+
+
         } else {
             return response()->json([
                 'status' => false,
@@ -82,6 +93,10 @@ class UsersController extends Controller
     {
         $user = User::find($id);
         $user->update($request->all());
+
+        Log::channel('user')->info('User updated',[
+            'userUpdated' => User::find($id)
+        ]);
         return $user;
     }
 
@@ -94,6 +109,10 @@ class UsersController extends Controller
     public function destroy(int $id): JsonResponse
     {
         $user = User::find($id);
+
+        Log::channel('user')->info('User deleted',[
+            'userDeleted' => User::find($id)
+        ]);
 
         if ($user->delete()) {
             return response()->json([
