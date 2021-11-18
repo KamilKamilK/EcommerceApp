@@ -19,8 +19,8 @@ class DatabaseSeeder extends Seeder
     {
          User::factory(10)->create();
          Product::factory(10)->create();
-         Order::factory(10)->create();
-         DB::table('order_products')->insert(
+         Order::factory(2)->create();
+         DB::table('order_product')->insert(
            [
                'order_id' => Order::all()->random()->id,
                'product_id' => Product::all()->random()->id,

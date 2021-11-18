@@ -90,6 +90,7 @@ class OrdersController extends Controller
             ], 400);
         }
 
+        // Create new user or update existing one after placing order
         $user = User::where('email', $request->email)->first();
         if ($user == null) {
             $user = new User();
@@ -109,17 +110,24 @@ class OrdersController extends Controller
         $userOrders = Order::where('user_id', $user->id)->get();
 
 
-        $totalPrice = 0;
-
-//        dd($userOrders);
-        foreach ($userOrders as $userOrder) {
-            $totalPrice += $userOrder->price_in_PLN;
-        }
-
         Log::channel('order')->info('Order created', [
             'orderCreated' => Order::where('user_id', $user->id)->get()
         ]);
 
+        //Count total amount of ordered products
+        if ($userOrders->count() >=1 ){
+            $totalPrice = $newProduct->price_in_PLN;
+        } else {
+            $totalPrice = 0;
+        }
+
+        foreach ($userOrders as $userOrder) {
+            foreach ($userOrder->products as $product){
+                $totalPrice += $product->price_in_PLN;
+            }
+        }
+
+        //Create new order if all order statuses are closed
         if ($user->id && $closedOrders && $openOrder == null) {
             $order = new Order();
             $order->user_id = $user->id;
@@ -131,13 +139,14 @@ class OrdersController extends Controller
                 'product_id' => $request->product_id,
                 'created_at' => date('Y-m-d H:i:s'),
             ]);
-
             return response()->json([
                 'status' => true,
                 'order' => $order,
                 'message' => 'New order created'
             ]);
-        } elseif ($user->id && $openOrder) {
+
+            //Update existing order if order status is  open
+        } elseif ($user->id && $openOrder->count() >= 1 ) {
             $openOrder->user_id = $user->id;
             $openOrder->price_in_PLN = $totalPrice;
             $openOrder->order_status = $request->order_status;
@@ -147,7 +156,6 @@ class OrdersController extends Controller
                 'product_id' => $request->product_id,
                 'created_at' => date('Y-m-d H:i:s'),
             ]);
-
             return response()->json([
                 'status' => true,
                 'order' => $openOrder,
