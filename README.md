@@ -42,7 +42,7 @@ php artisan db:seed
 
 #### POSTMAN collection urls
 
-# USER
+### USER
 
 POST api/admin/users - create new user
 
@@ -54,7 +54,7 @@ PUT api/admin/users/{1} -modify user with id 1
 
 DELETE api/admin/users/{1} - delete user with id 1
 
-# PRODUCT
+### PRODUCT
 
 POST api/admin/products - create new products
 
@@ -71,7 +71,7 @@ GET api/public/products - get all products
 
 GET api/public/products/{1} - show single products with id 1
 
-# ORDER
+### ORDER
 
 POST api/admin/orders - create new orders
 
