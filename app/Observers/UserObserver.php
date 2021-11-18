@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\User;
+use Illuminate\Support\Facades\Request;
 
 class UserObserver
 {
@@ -13,12 +14,14 @@ class UserObserver
      * @param User $user
      * @return void
      */
-    public function creating(User $user)
+    public function created(User $user)
     {
 
-            $user = new User();
-            $user->number_of_orders +=  1;
-            $user->save();
+//        dd('Creating...');
+
+
+        $user->number_of_orders = $user->number_of_orders +1;
+        $user->save();
     }
 
     /**
