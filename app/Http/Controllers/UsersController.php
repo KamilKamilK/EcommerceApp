@@ -36,7 +36,7 @@ class UsersController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:50',
             'email' => 'required|email:rfc,dns|unique:users',
-            'number_of_orders' => 'required|between:0,99.99'
+            'number_of_orders' => 'between:0,99.99'
         ]);
 
         if ($validator->fails()) {

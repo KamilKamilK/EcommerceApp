@@ -19,8 +19,9 @@ class Order extends Model
 
     public function products()
     {
-        return $this->belongsToMany(Product::class, 'order_products','product_id','order_id')
-            ->withTimestamps();
+        return $this->belongsToMany(Product::class)
+            ->withTimestamps()
+            ->withTimestamps()->withPivot('order_id', 'product_id');
     }
 
     // user_id

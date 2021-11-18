@@ -17,7 +17,7 @@ class CreateUsersTable extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
-            $table->integer('number_of_orders');
+            $table->integer('number_of_orders')->nullable()->default(0);
             $table->timestamps();
         });
     }

@@ -20,7 +20,7 @@ class OrdersController extends Controller
      */
     public function index(): JsonResponse
     {
-        Log::channel('order')->info('Get all orders',[
+        Log::channel('order')->info('Get all orders', [
             'listOfOrder' => Order::all()
         ]);
         $orders = Order::with('user')->orderBy('id', 'DESC')->get();
@@ -105,37 +105,28 @@ class OrdersController extends Controller
         $newProduct = Product::find($request->product_id);
 
         $openOrder = Order::where('user_id', $user->id)->where('order_status', 'open')->first();
-        $closedOrder = Order::where('user_id', $user->id)->where('order_status', 'close')->get();
+        $closedOrders = Order::where('user_id', $user->id)->where('order_status', 'close')->get();
         $userOrders = Order::where('user_id', $user->id)->get();
 
-        foreach ($userOrders as $userOrder) {
-            $userOrder->products()->get(['order_id', 'product_id']);
-        }
 
         $totalPrice = 0;
+
+//        dd($userOrders);
         foreach ($userOrders as $userOrder) {
             $totalPrice += $userOrder->price_in_PLN;
-        }
-
-        if ($user->id && $closedOrder && $openOrder == null) {
-            $order = new Order();
-            $order->user_id = $user->id;
-            $order->price_in_PLN = $newProduct->price_in_PLN;
-            $order->order_status = $request->order_status;
-        } elseif ($user->id && $openOrder) {
-            $openOrder->user_id = $user->id;
-            $openOrder->price_in_PLN = $totalPrice;
-            $openOrder->order_status = $request->order_status;
-            $openOrder->update();
         }
 
         Log::channel('order')->info('Order created', [
             'orderCreated' => Order::where('user_id', $user->id)->get()
         ]);
 
-        if ($order->save()) {
-
-            DB::table('order_products')->insert([
+        if ($user->id && $closedOrders && $openOrder == null) {
+            $order = new Order();
+            $order->user_id = $user->id;
+            $order->price_in_PLN = $newProduct->price_in_PLN;
+            $order->order_status = $request->order_status;
+            $order->save();
+            DB::table('order_product')->insert([
                 'order_id' => $order->id,
                 'product_id' => $request->product_id,
                 'created_at' => date('Y-m-d H:i:s'),
@@ -146,17 +137,20 @@ class OrdersController extends Controller
                 'order' => $order,
                 'message' => 'New order created'
             ]);
-        } elseif ($openOrder->update()) {
-
-            DB::table('order_products')->insert([
-                'order_id' => $order->id,
+        } elseif ($user->id && $openOrder) {
+            $openOrder->user_id = $user->id;
+            $openOrder->price_in_PLN = $totalPrice;
+            $openOrder->order_status = $request->order_status;
+            $openOrder->update();
+            DB::table('order_product')->insert([
+                'order_id' => $openOrder->id,
                 'product_id' => $request->product_id,
                 'created_at' => date('Y-m-d H:i:s'),
             ]);
 
             return response()->json([
                 'status' => true,
-                'order' => $order,
+                'order' => $openOrder,
                 'message' => 'New order updated'
             ]);
         } else {
@@ -167,59 +161,62 @@ class OrdersController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param int $id
-     * @return mixed
-     */
-    public function show(int $id)
-    {
-        return Order::where('id', $id)->with('products')->get();
-    }
+        /**
+         * Display the specified resource.
+         *
+         * @param int $id
+         * @return mixed
+         */
+        public
+        function show(int $id)
+        {
+            return Order::where('id', $id)->with('products')->get();
+        }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param Request $request
-     * @param int $id
-     * @return Order
-     */
-    public function update(Request $request, int $id): Order
-    {
-        Log::channel('order')->info('Order updated', [
-            'orderUpdated' => Order::find($id)
-        ]);
-        $order = Order::find($id);
-        $order->update($request->all());
-        return $order;
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param int $id
-     * @return JsonResponse
-     */
-    public function destroy(int $id): JsonResponse
-    {
-        $order = Order::find($id);
-
-        Log::channel('order')->info('Order destroyed', [
-            'orderDestroyed' => Order::find($id)
-        ]);
-
-        if ($order->delete()) {
-            return response()->json([
-                'status' => true,
-                'order' => $order,
-                'message' => "Order deleted correctly"
+        /**
+         * Update the specified resource in storage.
+         *
+         * @param Request $request
+         * @param int $id
+         * @return Order
+         */
+        public
+        function update(Request $request, int $id): Order
+        {
+            Log::channel('order')->info('Order updated', [
+                'orderUpdated' => Order::find($id)
             ]);
-        } else {
-            return response()->json([
-                'status' => false,
-                'message' => "Can't delete this order"
+            $order = Order::find($id);
+            $order->update($request->all());
+            return $order;
+        }
+
+        /**
+         * Remove the specified resource from storage.
+         *
+         * @param int $id
+         * @return JsonResponse
+         */
+        public
+        function destroy(int $id): JsonResponse
+        {
+            $order = Order::find($id);
+
+            Log::channel('order')->info('Order destroyed', [
+                'orderDestroyed' => Order::find($id)
             ]);
+
+            if ($order->delete()) {
+                return response()->json([
+                    'status' => true,
+                    'order' => $order,
+                    'message' => "Order deleted correctly"
+                ]);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => "Can't delete this order"
+                ]);
+            }
         }
     }
-}
