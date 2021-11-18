@@ -48,25 +48,38 @@ POST api/admin/users - create new user
 GET api/admin/users - get all users
 
 GET api/admin/users/{1} - show single user with id 1
+
 PUT api/admin/users/{1} -modify user with id 1
+
 DELETE api/admin/users/{1} - delete user with id 1
 
 #PRODUCT
 POST api/admin/products - create new products
+
 GET api/admin/products - get all products
+
 GET api/admin/products/{1} - show single products with id 1
+
 PUT api/admin/products/{1} -modify products with id 1
+
 DELETE api/admin/products/{1} - delete products with id 1
 
+
 GET api/public/products - get all products
+
 GET api/public/products/{1} - show single products with id 1
 
 #ORDER
 POST api/admin/orders - create new orders
+
 GET api/admin/orders - get all orders
+
 GET api/admin/orders/{1} - show single orders with id 1
+
 PUT api/admin/orders/{1} -modify orders with id 1
+
 DELETE api/admin/orders/{1} - delete orders with id 1
+
 
 POST api/public/orders - create new orders as client
 
