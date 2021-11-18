@@ -44,7 +44,9 @@ php artisan db:seed
 
 #USER
 POST api/admin/users - create new user
+
 GET api/admin/users - get all users
+
 GET api/admin/users/{1} - show single user with id 1
 PUT api/admin/users/{1} -modify user with id 1
 DELETE api/admin/users/{1} - delete user with id 1
