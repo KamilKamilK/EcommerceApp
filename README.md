@@ -40,7 +40,7 @@ You can seed database typing laravel cli command
 php artisan db:seed
 ```
 
-#### POSTMAN collection urls
+#### POSTMAN urls
 
 ### USER
 
